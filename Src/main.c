@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,7 +49,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+uint8_t aRxBuffer;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,9 +99,9 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_LPUART1_UART_Init();
-  MX_IWDG_Init();
+  // MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-
+  printf("** Hello World ** \r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -290,7 +291,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-
+  HAL_UART_Receive_IT(&huart1, &aRxBuffer, 1);
   /* USER CODE END USART1_Init 2 */
 
 }
@@ -369,7 +370,17 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+PUTCHAR_PROTOTYPE
+{
+  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+  return ch;
+}
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+  HAL_UART_Transmit(&huart1, &aRxBuffer, 1, 0);
+  HAL_UART_Receive_IT(&huart1, &aRxBuffer, 1);
+}
 /* USER CODE END 4 */
 
 /**
