@@ -337,7 +337,7 @@
               <MiscControls/>
               <Define>USE_HAL_DRIVER,STM32G071xx</Define>
               <Undefine/>
-              <IncludePath>../Inc;            ../Drivers/STM32G0xx_HAL_Driver/Inc;            ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy;            ../Drivers/CMSIS/Device/ST/STM32G0xx/Include;            ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;             ../Drivers/STM32G0xx_HAL_Driver/Inc;             ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy;             ../Drivers/CMSIS/Device/ST/STM32G0xx/Include;             ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -420,14 +420,9 @@
               <FilePath>../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_gpio.c</FilePath>
             </File>
             <File>
-              <FileName>stm32g0xx_hal_uart.c</FileName>
+              <FileName>stm32g0xx_hal_iwdg.c</FileName>
               <FileType>1</FileType>
-              <FilePath>../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_uart.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32g0xx_hal_uart_ex.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_uart_ex.c</FilePath>
+              <FilePath>../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_iwdg.c</FilePath>
             </File>
             <File>
               <FileName>stm32g0xx_hal_rcc.c</FileName>
@@ -488,6 +483,16 @@
               <FileName>stm32g0xx_hal_exti.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32g0xx_hal_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32g0xx_hal_uart_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_uart_ex.c</FilePath>
             </File>
             <File>
               <FileName>stm32g0xx_hal_tim.c</FileName>
