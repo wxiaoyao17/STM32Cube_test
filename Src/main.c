@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,7 +50,10 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t aRxBuffer;
+uint8_t recvByte = 0;
+uint8_t usart1_recv_buf[USART1_RX_BUF_SIZE] = {0};
+uint16_t usart1_recv_pos = 0;
+uint8_t usart1_recv_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -109,7 +113,13 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+    if (usart1_recv_flag)
+    {
+      printf("recv data: %s\n", usart1_recv_buf);
+      memset(usart1_recv_buf, 0, usart1_recv_pos);
+      usart1_recv_pos = 0;
+      usart1_recv_flag = 0;
+    }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -291,7 +301,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-  HAL_UART_Receive_IT(&huart1, &aRxBuffer, 1);
+  HAL_UART_Receive_IT(&huart1, &recvByte, 1);
   /* USER CODE END USART1_Init 2 */
 
 }
@@ -376,10 +386,16 @@ PUTCHAR_PROTOTYPE
   return ch;
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  HAL_UART_Transmit(&huart1, &aRxBuffer, 1, 0);
-  HAL_UART_Receive_IT(&huart1, &aRxBuffer, 1);
+  if (huart->Instance == USART1)
+  {
+    if (HAL_UART_Receive_IT(&huart1, &recvByte, 1) == HAL_OK)
+    {
+      usart1_recv_buf[usart1_recv_pos++] = recvByte;
+    }
+    // HAL_UART_Transmit(&huart1, &recvByte, 1, 0);
+  }
 }
 /* USER CODE END 4 */
 

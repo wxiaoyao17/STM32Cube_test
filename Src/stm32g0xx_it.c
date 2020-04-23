@@ -60,7 +60,9 @@ extern UART_HandleTypeDef hlpuart1;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
-
+extern uint8_t usart1_recv_buf[];
+extern uint16_t usart1_recv_pos;
+extern uint8_t usart1_recv_flag;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -147,7 +149,18 @@ void SysTick_Handler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-
+  if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE) != RESET)
+  {
+    // HAL_UART_RxCpltCallback(&huart1);
+  }
+  if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_IDLE) != RESET)
+  {
+    __HAL_UART_CLEAR_IDLEFLAG(&huart1);
+    usart1_recv_buf[usart1_recv_pos] = '\0';
+    usart1_recv_flag = 1;
+    // usart1_recv_pos = 0;
+    // memset(usart1_recv_buf, 0, usart1_recv_pos);
+  }
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
