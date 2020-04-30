@@ -112,7 +112,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
     if (usart1_recv_flag)
     {
       printf("recv data: %s\n", usart1_recv_buf);
@@ -120,6 +119,7 @@ int main(void)
       usart1_recv_pos = 0;
       usart1_recv_flag = 0;
     }
+    /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -370,12 +370,22 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin : USER_BUTTON_Pin */
+  GPIO_InitStruct.Pin = USER_BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 }
 
