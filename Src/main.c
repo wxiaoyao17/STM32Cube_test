@@ -34,7 +34,14 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+// #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#ifdef __GNUC__
+  /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
+     set to 'Yes') calls __io_putchar() */
+  #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+  #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -106,22 +113,38 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_LPUART1_UART_Init();
-  MX_IWDG_Init();
+  // MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-  printf("** Hello World ** \r\n");
+  printf("** Hello Nucleo! ** \n");
+  HAL_UART_Receive_DMA(&huart1, usart1_recv_buf, 10); // 开启DMA接收，有数据则直接存入内存
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    if (usart1_recv_flag)
+    /* UART1 interrupt recv test begin */
+    // if (usart1_recv_flag)
+    // {
+    //   printf("recv data: %s\n", usart1_recv_buf);
+    //   memset(usart1_recv_buf, 0, usart1_recv_pos);
+    //   usart1_recv_pos = 0;
+    //   usart1_recv_flag = 0;
+    // }
+    /* UART1 interrupt recv test end */
+
+    /* UART1 DMA recv test begin */
+    /* NOTE: 需要关闭UART1中断方式相关的回调函数，注意DMA接收数据的长度，目前发送10字节正常，其他长度数据会移位 */
+    if (usart1_recv_buf[0] != 0) // 判断存储接收数据的数组首字节是否为空
     {
-      printf("recv data: %s\n", usart1_recv_buf);
-      memset(usart1_recv_buf, 0, usart1_recv_pos);
-      usart1_recv_pos = 0;
-      usart1_recv_flag = 0;
+      HAL_Delay(10); // 保障数据完整，等待DMA接收完成
+      printf("DMA recv data: %s\n", usart1_recv_buf);
+      // memset(usart1_recv_buf, 0, 10);
+      usart1_recv_buf[0] = 0; // 清除首字节数据
+      while (HAL_DMA_GetState(&hdma_usart1_rx) != HAL_DMA_STATE_READY){;} // 检测DMA状态
+      HAL_UART_Receive_DMA(&huart1, usart1_recv_buf, 10); // 开启DMA接收，有数据直接存入内存
     }
+    /* UART1 DMA recv test end */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -305,7 +328,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-  HAL_UART_Receive_IT(&huart1, &recvByte, 1);
+  // HAL_UART_Receive_IT(&huart1, &recvByte, 1);
   /* USER CODE END USART1_Init 2 */
 
 }
@@ -410,12 +433,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief  Retargets the C library printf function to the USART.
+  * @param  None
+  * @retval None
+  */
 PUTCHAR_PROTOTYPE
 {
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the EVAL_COM1 and Loop until the end of transmission */
   HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
   return ch;
 }
-
+#if 0
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART1)
@@ -427,6 +457,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     // HAL_UART_Transmit(&huart1, &recvByte, 1, 0);
   }
 }
+#endif
 /* USER CODE END 4 */
 
 /**

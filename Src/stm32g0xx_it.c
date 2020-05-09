@@ -178,6 +178,7 @@ void DMA1_Channel1_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
+#if 0
   if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE) != RESET)
   {
     // HAL_UART_RxCpltCallback(&huart1);
@@ -190,6 +191,7 @@ void USART1_IRQHandler(void)
     // usart1_recv_pos = 0;
     // memset(usart1_recv_buf, 0, usart1_recv_pos);
   }
+#endif
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
