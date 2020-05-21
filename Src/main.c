@@ -76,7 +76,7 @@ static void MX_LPUART1_UART_Init(void);
 static void MX_IWDG_Init(void);
 static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
-
+uint32_t Adc_getValue(uint32_t channel);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -91,7 +91,8 @@ static void MX_ADC1_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  float voltage1 = 0.0;
+  float voltage2 = 0.0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -149,6 +150,16 @@ int main(void)
       HAL_UART_Receive_DMA(&huart1, usart1_recv_buf, 10); // 开启DMA接收，有数据直接存入内存
     }
     /* UART1 DMA recv test end */
+
+    /* ADC test begin */
+    voltage1 = (float)Adc_getValue(ADC_CHANNEL_8) / 4096 * 3.3;
+    printf("voltage1 = %f\n", voltage1);
+    HAL_Delay(500);
+    
+    voltage2 = (float)Adc_getValue(ADC_CHANNEL_9) / 4096 * 3.3;
+    printf("voltage2 = %f\n", voltage2);
+    HAL_Delay(3000);
+    /* ADC test end */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -273,7 +284,15 @@ static void MX_ADC1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN ADC1_Init 2 */
-
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_9;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE END ADC1_Init 2 */
 
 }
@@ -517,6 +536,20 @@ PUTCHAR_PROTOTYPE
   return ch;
 }
 
+uint32_t Adc_getValue(uint32_t channel)
+{
+    ADC_ChannelConfTypeDef sConfig = {0};
+
+    sConfig.Channel = channel;
+    sConfig.Rank = ADC_REGULAR_RANK_1;
+    sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
+    // sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES_5;
+    HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, 10);
+
+    return HAL_ADC_GetValue(&hadc1);
+}
 #if 0
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
