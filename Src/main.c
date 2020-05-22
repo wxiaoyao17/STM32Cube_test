@@ -92,7 +92,10 @@ uint32_t Adc_getValue(uint32_t channel);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint32_t adc_value[100] = {0};
+  uint32_t adc_value_ch8 = 0;
+  uint32_t adc_value_ch9 = 0;
+  uint8_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -123,6 +126,8 @@ int main(void)
   printf("** Hello Nucleo! ** \n");
   /* UART1: Start the DMA receive process */
   HAL_UART_Receive_DMA(&huart1, usart1_recv_buf, 10);
+  /* ADC1: Start the conversion process and enable interrupt */
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&adc_value, 100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -153,15 +158,30 @@ int main(void)
     /* UART1 DMA recv test end */
 
     /* ADC test begin */
-    printf("\r\n******** ADC test ********\r\n");
-    adc_value_ch8 = Adc_getValue(ADC_CHANNEL_8);
-    printf("voltage PB0 = %1.3f\n", adc_value_ch8 * 3.3f / 4096);
-    HAL_Delay(100);
+    // printf("\r\n******** ADC test ********\r\n");
+    // adc_value_ch8 = Adc_getValue(ADC_CHANNEL_8);
+    // printf("voltage PB0 = %1.3fV\n", adc_value_ch8 * 3.3f / 4096);
+    // HAL_Delay(100);
     
-    adc_value_ch9 = Adc_getValue(ADC_CHANNEL_9);
-    printf("voltage PB1 = %1.3f\n", adc_value_ch9 * 3.3f / 4096);
-    HAL_Delay(1000);
+    // adc_value_ch9 = Adc_getValue(ADC_CHANNEL_9);
+    // printf("voltage PB1 = %1.3fV\n", adc_value_ch9 * 3.3f / 4096);
+    // HAL_Delay(1000);
     /* ADC test end */
+
+    /* ADC DMA test begin */
+    HAL_Delay(1000);
+    for (i = 0, adc_value_ch8 = 0, adc_value_ch9 = 0; i < 100;)
+    {
+      adc_value_ch8 += adc_value[i++]; // 偶数下标为通道8的值
+      adc_value_ch9 += adc_value[i++]; // 奇数下标为通道9的值
+    }
+    adc_value_ch8 /= 50;
+    adc_value_ch9 /= 50;
+
+    printf("\r\n******** ADC DMA test ********\r\n");
+    printf(" voltage PB0 = %1.3fV \r\n", adc_value_ch8 * 3.3f / 4096);
+    printf(" voltage PB1 = %1.3fV \r\n", adc_value_ch9 * 3.3f / 4096);
+    /* ADC DMA test end */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
