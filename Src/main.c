@@ -51,6 +51,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 IWDG_HandleTypeDef hiwdg;
 
@@ -91,8 +92,7 @@ uint32_t Adc_getValue(uint32_t channel);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  float voltage1 = 0.0;
-  float voltage2 = 0.0;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -117,11 +117,12 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_LPUART1_UART_Init();
-//   MX_IWDG_Init();
+  // MX_IWDG_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   printf("** Hello Nucleo! ** \n");
-  HAL_UART_Receive_DMA(&huart1, usart1_recv_buf, 10); // 开启DMA接收，有数据则直接存入内存
+  /* UART1: Start the DMA receive process */
+  HAL_UART_Receive_DMA(&huart1, usart1_recv_buf, 10);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -140,25 +141,26 @@ int main(void)
 
     /* UART1 DMA recv test begin */
     /* NOTE: 需要关闭UART1中断方式相关的回调函数，注意DMA接收数据的长度，目前发送10字节正常，其他长度数据会移位 */
-    if (usart1_recv_buf[0] != 0) // 判断存储接收数据的数组首字节是否为空
-    {
-      HAL_Delay(10); // 保障数据完整，等待DMA接收完成
-      printf("DMA recv data: %s\n", usart1_recv_buf);
-      // memset(usart1_recv_buf, 0, 10);
-      usart1_recv_buf[0] = 0; // 清除首字节数据
-      while (HAL_DMA_GetState(&hdma_usart1_rx) != HAL_DMA_STATE_READY){;} // 检测DMA状态
-      HAL_UART_Receive_DMA(&huart1, usart1_recv_buf, 10); // 开启DMA接收，有数据直接存入内存
-    }
+    // if (usart1_recv_buf[0] != 0) // 判断存储接收数据的数组首字节是否为空
+    // {
+    //   HAL_Delay(10); // 保障数据完整，等待DMA接收完成
+    //   printf("DMA recv data: %s\n", usart1_recv_buf);
+    //   // memset(usart1_recv_buf, 0, 10);
+    //   usart1_recv_buf[0] = 0; // 清除首字节数据
+    //   while (HAL_DMA_GetState(&hdma_usart1_rx) != HAL_DMA_STATE_READY){;} // 检测DMA状态
+    //   HAL_UART_Receive_DMA(&huart1, usart1_recv_buf, 10); // 开启DMA接收，有数据直接存入内存
+    // }
     /* UART1 DMA recv test end */
 
     /* ADC test begin */
-    voltage1 = (float)Adc_getValue(ADC_CHANNEL_8) / 4096 * 3.3;
-    printf("voltage1 = %f\n", voltage1);
-    HAL_Delay(500);
+    printf("\r\n******** ADC test ********\r\n");
+    adc_value_ch8 = Adc_getValue(ADC_CHANNEL_8);
+    printf("voltage PB0 = %1.3f\n", adc_value_ch8 * 3.3f / 4096);
+    HAL_Delay(100);
     
-    voltage2 = (float)Adc_getValue(ADC_CHANNEL_9) / 4096 * 3.3;
-    printf("voltage2 = %f\n", voltage2);
-    HAL_Delay(3000);
+    adc_value_ch9 = Adc_getValue(ADC_CHANNEL_9);
+    printf("voltage PB1 = %1.3f\n", adc_value_ch9 * 3.3f / 4096);
+    HAL_Delay(1000);
     /* ADC test end */
     /* USER CODE END WHILE */
 
@@ -236,8 +238,8 @@ static void MX_ADC1_Init(void)
 
   /* USER CODE END ADC1_Init 0 */
 
-  ADC_AnalogWDGConfTypeDef AnalogWDGConfig = {0};
   ADC_ChannelConfTypeDef sConfig = {0};
+  ADC_AnalogWDGConfTypeDef AnalogWDGConfig = {0};
 
   /* USER CODE BEGIN ADC1_Init 1 */
 
@@ -248,22 +250,37 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.ScanConvMode = ADC_SCAN_SEQ_FIXED;
+  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_3CYCLES_5;
-  hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_3CYCLES_5;
   hadc1.Init.OversamplingMode = DISABLE;
   hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel 
+  */
+  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel 
+  */
+  sConfig.Channel = ADC_CHANNEL_9;
+  sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -271,15 +288,6 @@ static void MX_ADC1_Init(void)
   */
   AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
   if (HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel 
-  */
-  sConfig.Channel = ADC_CHANNEL_8;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -483,6 +491,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel2_3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 
 }
 
